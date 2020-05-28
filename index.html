@@ -181,6 +181,28 @@
   </div>
 </template>
 
+<script>
+  var HEIGHT_COEF = 1.337;
+  var fireballSize = 22;
+  var wizardSpeed = 3;
+  var wizardWidth = 70;
+
+  var getFireballSpeed = function (leftWind) {
+    return (leftWind) ? 5 : 2;
+  }
+
+  var getWizardHeight = function () {
+    return wizardWidth * HEIGHT_COEF;
+  };
+
+  var getWizardX = function (gameFieldWidth) {
+     return (gameFieldWidth - wizardWidth) / 2;
+   }
+
+  var getWizardY = function(gameFieldHeight) {
+     return gameFieldHeight / 3;
+   }
+</script>
 <script src="js/game.js"></script>
 
 </body>
