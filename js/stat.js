@@ -2,7 +2,7 @@
 
 var FONT_SIZE = 16;
 
-var COLORS = {
+var Colors = {
   MY_SCORE_BAR: 'rgba(255, 0, 0, 1)',
   TEXT_COLOR: '#000',
   CLOUD_COLOR: '#fff',
@@ -36,7 +36,7 @@ var SCORE_RANGE = {
   MAX: 5000
 };
 
-var LABELS = {
+var Labels = {
   VICTORY: 'Ура вы победили!',
   RESULT: 'Список результатов:'
 };
@@ -58,6 +58,12 @@ var renderText = function (ctx, x, y, color, text) {
   ctx.fillText(text, x, y);
 };
 
+var renderScoreBar = function (ctx, x, y, width, height, color) {
+  ctx.fillStyle = color;
+
+  ctx.fillRect(x, y, width, height);
+};
+
 var createScores = function () {
   var scoresArray = [];
   for (var i = 0; i < PLAYER_NAMES.length; i++) {
@@ -68,39 +74,37 @@ var createScores = function () {
 };
 
 var assignBarColor = function (name) {
-  return (name === 'Вы') ? COLORS.MY_SCORE_BAR : 'hsl(230,' + createRandomFromRange(0, 100) + '%, 50%)';
+  return (name === 'Вы') ? Colors.MY_SCORE_BAR : 'hsl(230,' + createRandomFromRange(0, 100) + '%, 50%)';
 };
 
-var renderPlayerScore = function (ctx) {
-  var playerScores = createScores();
-  var maxScore = Math.max.apply(null, playerScores);
+var renderPlayerScore = function (ctx, name, index, scores, max) {
 
-  PLAYER_NAMES.forEach(function (name, index) {
+  renderText(
+      ctx,
+      RESULT_CLOUD.X + INDENT.LEFT_TEXT_INDENT + index * (INDENT.RIGHT_BAR_INDENT + RESULT_BAR.WIDTH),
+      RESULT_CLOUD.HEIGHT - INDENT.BOTTOM_TEXT_INDENT,
+      Colors.TEXT_COLOR,
+      name
+  );
 
-    renderText(
-        ctx,
-        RESULT_CLOUD.X + INDENT.LEFT_TEXT_INDENT + index * (INDENT.RIGHT_BAR_INDENT + RESULT_BAR.WIDTH),
-        RESULT_CLOUD.HEIGHT - INDENT.BOTTOM_TEXT_INDENT,
-        COLORS.TEXT_COLOR,
-        name
-    );
+  renderText(
+      ctx,
+      RESULT_CLOUD.X + INDENT.LEFT_TEXT_INDENT + index * (INDENT.RIGHT_BAR_INDENT + RESULT_BAR.WIDTH),
+      RESULT_CLOUD.HEIGHT - INDENT.BOTTOM_BAR_INDENT - RESULT_BAR.MAX_HEIGHT * (scores[index] / max) - INDENT.TOP_TEXT_INDENT,
+      Colors.TEXT_COLOR,
+      scores[index]
+  );
 
-    renderText(
-        ctx,
-        RESULT_CLOUD.X + INDENT.LEFT_TEXT_INDENT + index * (INDENT.RIGHT_BAR_INDENT + RESULT_BAR.WIDTH),
-        RESULT_CLOUD.HEIGHT - INDENT.BOTTOM_BAR_INDENT - RESULT_BAR.MAX_HEIGHT * (playerScores[index] / maxScore) - INDENT.TOP_TEXT_INDENT,
-        COLORS.TEXT_COLOR,
-        playerScores[index]
-    );
+  // ctx.fillStyle = assignBarColor(name);
 
-    ctx.fillStyle = assignBarColor(name);
-
-    ctx.fillRect(
-        RESULT_CLOUD.X + INDENT.LEFT_TEXT_INDENT + index * (INDENT.RIGHT_BAR_INDENT + RESULT_BAR.WIDTH),
-        RESULT_CLOUD.HEIGHT - INDENT.BOTTOM_BAR_INDENT - RESULT_BAR.MAX_HEIGHT * (playerScores[index] / maxScore),
-        RESULT_BAR.WIDTH,
-        RESULT_BAR.MAX_HEIGHT * (playerScores[index] / maxScore));
-  });
+  renderScoreBar(
+      ctx,
+      RESULT_CLOUD.X + INDENT.LEFT_TEXT_INDENT + index * (INDENT.RIGHT_BAR_INDENT + RESULT_BAR.WIDTH),
+      RESULT_CLOUD.HEIGHT - INDENT.BOTTOM_BAR_INDENT - RESULT_BAR.MAX_HEIGHT * (scores[index] / max),
+      RESULT_BAR.WIDTH,
+      RESULT_BAR.MAX_HEIGHT * (scores[index] / max),
+      assignBarColor(name)
+  );
 };
 
 window.renderStatistics = function (ctx) {
@@ -108,29 +112,34 @@ window.renderStatistics = function (ctx) {
       ctx,
       RESULT_CLOUD.X + RESULT_CLOUD.GAP,
       RESULT_CLOUD.Y + RESULT_CLOUD.GAP,
-      COLORS.SHADOW_COLOR);
+      Colors.SHADOW_COLOR);
 
   renderCloud(
       ctx,
       RESULT_CLOUD.X,
       RESULT_CLOUD.Y,
-      COLORS.CLOUD_COLOR);
+      Colors.CLOUD_COLOR);
 
   renderText(
       ctx,
       RESULT_CLOUD.X + INDENT.LEFT_TEXT_INDENT,
       RESULT_CLOUD.Y + INDENT.TOP_LABEL_INDENT,
-      COLORS.TEXT_COLOR,
-      LABELS.VICTORY
+      Colors.TEXT_COLOR,
+      Labels.VICTORY
   );
 
   renderText(
       ctx,
       RESULT_CLOUD.X + INDENT.LEFT_TEXT_INDENT,
       RESULT_CLOUD.Y + INDENT.TOP_LABEL_INDENT + FONT_SIZE,
-      COLORS.TEXT_COLOR,
-      LABELS.RESULT
+      Colors.TEXT_COLOR,
+      Labels.RESULT
   );
 
-  renderPlayerScore(ctx);
+  var playerScores = createScores();
+  var maxScore = Math.max.apply(null, playerScores);
+
+  PLAYER_NAMES.forEach(function (name, index) {
+    renderPlayerScore(ctx, name, index, playerScores, maxScore);
+  });
 };
