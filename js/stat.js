@@ -2,7 +2,14 @@
 
 var FONT_SIZE = 16;
 
-var resultCloud = {
+var COLORS = {
+  MY_SCORE_BAR: 'rgba(255, 0, 0, 1)',
+  TEXT_COLOR: '#000',
+  CLOUD_COLOR: '#fff',
+  SHADOW_COLOR: 'rgba(0, 0, 0, 0.3)'
+};
+
+var RESULT_CLOUD = {
   X: 100,
   Y: 10,
   WIDTH: 420,
@@ -10,12 +17,12 @@ var resultCloud = {
   GAP: 10
 };
 
-var resultBar = {
+var RESULT_BAR = {
   WIDTH: 40,
   MAX_HEIGHT: 150
 };
 
-var indent = {
+var INDENT = {
   BOTTOM_TEXT_INDENT: 10,
   TOP_TEXT_INDENT: 10,
   BOTTOM_BAR_INDENT: 30,
@@ -24,12 +31,17 @@ var indent = {
   TOP_LABEL_INDENT: 25
 };
 
-var scoreRange = {
+var SCORE_RANGE = {
   MIN: 0,
   MAX: 5000
 };
 
-var playersNames = ['Вы', 'Кекс', 'Катя', 'Игорь'];
+var LABELS = {
+  VICTORY: 'Ура вы победили!',
+  RESULT: 'Список результатов:'
+};
+
+var PLAYER_NAMES = ['Вы', 'Кекс', 'Катя', 'Игорь'];
 
 var createRandomFromRange = function (min, max) {
   return Math.round(Math.random() * (max - min) + min);
@@ -37,10 +49,10 @@ var createRandomFromRange = function (min, max) {
 
 var renderCloud = function (ctx, x, y, color) {
   ctx.fillStyle = color;
-  ctx.fillRect(x, y, resultCloud.WIDTH, resultCloud.HEIGHT);
+  ctx.fillRect(x, y, RESULT_CLOUD.WIDTH, RESULT_CLOUD.HEIGHT);
 };
 
-var renderLabel = function (ctx, x, y, color, text) {
+var renderText = function (ctx, x, y, color, text) {
   ctx.font = FONT_SIZE + 'px PT Mono';
   ctx.fillStyle = color;
   ctx.fillText(text, x, y);
@@ -48,57 +60,77 @@ var renderLabel = function (ctx, x, y, color, text) {
 
 var createScores = function () {
   var scoresArray = [];
-  for (var i = 0; i < playersNames.length; i++) {
-    scoresArray.push(createRandomFromRange(scoreRange.MIN, scoreRange.MAX));
+  for (var i = 0; i < PLAYER_NAMES.length; i++) {
+    scoresArray.push(createRandomFromRange(SCORE_RANGE.MIN, SCORE_RANGE.MAX));
   }
 
   return scoresArray;
 };
 
+var assignBarColor = function (name) {
+  return (name === 'Вы') ? COLORS.MY_SCORE_BAR : 'hsl(230,' + createRandomFromRange(0, 100) + '%, 50%)';
+};
+
+var renderPlayerScore = function (ctx) {
+  var playerScores = createScores();
+  var maxScore = Math.max.apply(null, playerScores);
+
+  PLAYER_NAMES.forEach(function (name, index) {
+
+    renderText(
+        ctx,
+        RESULT_CLOUD.X + INDENT.LEFT_TEXT_INDENT + index * (INDENT.RIGHT_BAR_INDENT + RESULT_BAR.WIDTH),
+        RESULT_CLOUD.HEIGHT - INDENT.BOTTOM_TEXT_INDENT,
+        COLORS.TEXT_COLOR,
+        name
+    );
+
+    renderText(
+        ctx,
+        RESULT_CLOUD.X + INDENT.LEFT_TEXT_INDENT + index * (INDENT.RIGHT_BAR_INDENT + RESULT_BAR.WIDTH),
+        RESULT_CLOUD.HEIGHT - INDENT.BOTTOM_BAR_INDENT - RESULT_BAR.MAX_HEIGHT * (playerScores[index] / maxScore) - INDENT.TOP_TEXT_INDENT,
+        COLORS.TEXT_COLOR,
+        playerScores[index]
+    );
+
+    ctx.fillStyle = assignBarColor(name);
+
+    ctx.fillRect(
+        RESULT_CLOUD.X + INDENT.LEFT_TEXT_INDENT + index * (INDENT.RIGHT_BAR_INDENT + RESULT_BAR.WIDTH),
+        RESULT_CLOUD.HEIGHT - INDENT.BOTTOM_BAR_INDENT - RESULT_BAR.MAX_HEIGHT * (playerScores[index] / maxScore),
+        RESULT_BAR.WIDTH,
+        RESULT_BAR.MAX_HEIGHT * (playerScores[index] / maxScore));
+  });
+};
+
 window.renderStatistics = function (ctx) {
   renderCloud(
       ctx,
-      resultCloud.X + resultCloud.GAP,
-      resultCloud.Y + resultCloud.GAP,
-      'rgba(0, 0, 0, 0.3)');
+      RESULT_CLOUD.X + RESULT_CLOUD.GAP,
+      RESULT_CLOUD.Y + RESULT_CLOUD.GAP,
+      COLORS.SHADOW_COLOR);
+
   renderCloud(
       ctx,
-      resultCloud.X,
-      resultCloud.Y,
-      '#fff');
-  renderLabel(
+      RESULT_CLOUD.X,
+      RESULT_CLOUD.Y,
+      COLORS.CLOUD_COLOR);
+
+  renderText(
       ctx,
-      resultCloud.X + indent.LEFT_TEXT_INDENT,
-      resultCloud.Y + indent.TOP_LABEL_INDENT,
-      '#000',
-      'Ура вы победили!'
-  );
-  renderLabel(
-      ctx,
-      resultCloud.X + indent.LEFT_TEXT_INDENT,
-      resultCloud.Y + indent.TOP_LABEL_INDENT + FONT_SIZE,
-      '#000',
-      'Список результатов:'
+      RESULT_CLOUD.X + INDENT.LEFT_TEXT_INDENT,
+      RESULT_CLOUD.Y + INDENT.TOP_LABEL_INDENT,
+      COLORS.TEXT_COLOR,
+      LABELS.VICTORY
   );
 
-  var playersScores = createScores();
-  var maxScore = Math.max.apply(null, playersScores);
+  renderText(
+      ctx,
+      RESULT_CLOUD.X + INDENT.LEFT_TEXT_INDENT,
+      RESULT_CLOUD.Y + INDENT.TOP_LABEL_INDENT + FONT_SIZE,
+      COLORS.TEXT_COLOR,
+      LABELS.RESULT
+  );
 
-  playersNames.forEach(function (name, index) {
-    ctx.fillStyle = '#000';
-    ctx.fillText(
-        name,
-        resultCloud.X + indent.LEFT_TEXT_INDENT + index * (indent.RIGHT_BAR_INDENT + resultBar.WIDTH),
-        resultCloud.HEIGHT - indent.BOTTOM_TEXT_INDENT);
-    ctx.fillText(
-        playersScores[index],
-        resultCloud.X + indent.LEFT_TEXT_INDENT + index * (indent.RIGHT_BAR_INDENT + resultBar.WIDTH),
-        resultCloud.HEIGHT - indent.BOTTOM_BAR_INDENT - resultBar.MAX_HEIGHT * (playersScores[index] / maxScore) - indent.TOP_TEXT_INDENT);
-    ctx.fillStyle = (name === 'Вы') ? 'rgba(255, 0, 0, 1)' : 'hsl(230,' + createRandomFromRange(0, 100) + '%, 50%)';
-    ctx.fillRect(
-        resultCloud.X + indent.LEFT_TEXT_INDENT + index * (indent.RIGHT_BAR_INDENT + resultBar.WIDTH),
-        resultCloud.HEIGHT - indent.BOTTOM_BAR_INDENT - resultBar.MAX_HEIGHT * (playersScores[index] / maxScore),
-        resultBar.WIDTH,
-        resultBar.MAX_HEIGHT * (playersScores[index] / maxScore));
-  });
+  renderPlayerScore(ctx);
 };
